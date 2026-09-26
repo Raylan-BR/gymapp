@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Teste de sensores</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        button {
+            font-size: 20px;
+            padding: 15px 25px;
+        }
+
+        .sensor {
+            font-size: 22px;
+            margin: 20px 0;
+        }
+
+        #status {
+            padding: 15px;
+            background: #eee;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Teste de movimento</h1>
+
+    <button id="start">
+        Iniciar sensores
+    </button>
+
+    <div id="status">
+        Aguardando...
+    </div>
+
+    <div class="sensor">
+        X: <span id="x">---</span>
+    </div>
+
+    <div class="sensor">
+        Y: <span id="y">---</span>
+    </div>
+
+    <div class="sensor">
+        Z: <span id="z">---</span>
+    </div>
+
+    <div class="sensor">
+        Gravidade X: <span id="gx">---</span>
+    </div>
+
+    <div class="sensor">
+        Gravidade Y: <span id="gy">---</span>
+    </div>
+
+    <div class="sensor">
+        Gravidade Z: <span id="gz">---</span>
+    </div>
+
+    <script>
+
+        const status = document.getElementById("status");
+
+        const x = document.getElementById("x");
+        const y = document.getElementById("y");
+        const z = document.getElementById("z");
+
+        const gx = document.getElementById("gx");
+        const gy = document.getElementById("gy");
+        const gz = document.getElementById("gz");
+
+        const button = document.getElementById("start");
+
+
+        function mostrarStatus(texto) {
+            status.textContent = texto;
+            console.log(texto);
+        }
+
+
+        button.addEventListener("click", async () => {
+
+            mostrarStatus("Iniciando...");
+
+
+            // Verifica se o navegador conhece a API
+            if (typeof DeviceMotionEvent === "undefined") {
+
+                mostrarStatus(
+                    "ERRO:\n" +
+                    "DeviceMotionEvent não existe neste navegador."
+                );
+
+                return;
+            }
+
+
+            mostrarStatus(
+                "DeviceMotionEvent encontrado.\n" +
+                "Solicitando permissão..."
+            );
+
+
+            // Alguns navegadores exigem permissão explícita
+            if (
+                typeof DeviceMotionEvent.requestPermission === "function"
+            ) {
+
+                try {
+
+                    const permission =
+                        await DeviceMotionEvent.requestPermission();
+
+                    console.log("Permissão:", permission);
+
+                    if (permission !== "granted") {
+
+                        mostrarStatus(
+                            "PERMISSÃO NEGADA.\n\n" +
+                            "O navegador não permitiu acesso aos sensores."
+                        );
+
+                        return;
+                    }
+
+                } catch (error) {
+
+                    mostrarStatus(
+                        "ERRO AO SOLICITAR PERMISSÃO:\n\n" +
+                        error.name + "\n" +
+                        error.message
+                    );
+
+                    return;
+                }
+
+            } else {
+
+                console.log(
+                    "Este navegador não exige requestPermission()."
+                );
+
+            }
+
+
+            mostrarStatus(
+                "Permissão OK.\n\n" +
+                "Aguardando dados do sensor..."
+            );
+
+
+            // Agora começamos a ouvir o sensor
+            window.addEventListener("devicemotion", (event) => {
+
+                console.log("devicemotion:", event);
+
+
+                // Aceleração sem gravidade
+                const acceleration =
+                    event.acceleration;
+
+
+                // Aceleração incluindo gravidade
+                const accelerationGravity =
+                    event.accelerationIncludingGravity;
+
+
+                if (acceleration) {
+
+                    x.textContent =
+                        acceleration.x?.toFixed(3) ?? "null";
+
+                    y.textContent =
+                        acceleration.y?.toFixed(3) ?? "null";
+
+                    z.textContent =
+                        acceleration.z?.toFixed(3) ?? "null";
+
+                }
+
+
+                if (accelerationGravity) {
+
+                    gx.textContent =
+                        accelerationGravity.x?.toFixed(3) ?? "null";
+
+                    gy.textContent =
+                        accelerationGravity.y?.toFixed(3) ?? "null";
+
+                    gz.textContent =
+                        accelerationGravity.z?.toFixed(3) ?? "null";
+
+                }
+
+
+                status.textContent =
+                    "SENSOR FUNCIONANDO!\n\n" +
+                    "Intervalo: " +
+                    event.interval +
+                    " ms";
+
+            });
+
+        });
+
+    </script>
+
+</body>
+</html>
