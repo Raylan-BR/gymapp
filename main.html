@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -9,7 +10,7 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Movimento - 5 segundos</title>
+    <title>DeviceMotion - 6 sensores</title>
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -30,7 +31,7 @@
         }
 
         .container {
-            max-width: 900px;
+            max-width: 1000px;
             margin: auto;
         }
 
@@ -60,7 +61,6 @@
 
         button:disabled {
             opacity: 0.5;
-
             cursor: not-allowed;
         }
 
@@ -68,6 +68,16 @@
             text-align: center;
 
             font-size: 18px;
+
+            margin: 20px;
+        }
+
+        .timer {
+            text-align: center;
+
+            font-size: 40px;
+
+            font-weight: bold;
 
             margin: 20px;
         }
@@ -84,14 +94,43 @@
                 rgba(0,0,0,0.08);
         }
 
-        .timer {
-            text-align: center;
+        .values {
+            display: grid;
 
-            font-size: 40px;
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 10px;
+
+            margin-bottom: 20px;
+        }
+
+        .value-card {
+            background: white;
+
+            padding: 15px;
+
+            border-radius: 8px;
+
+            text-align: center;
+        }
+
+        .value-card h3 {
+            margin: 0 0 8px 0;
+        }
+
+        .value {
+            font-size: 20px;
 
             font-weight: bold;
+        }
 
-            margin: 20px;
+        @media (max-width: 600px) {
+
+            .values {
+                grid-template-columns: 1fr;
+            }
+
         }
 
     </style>
@@ -104,9 +143,11 @@
 <div class="container">
 
     <h1>
-        Gravar movimento
+        Análise de movimento
     </h1>
 
+
+    <!-- TIMER -->
 
     <div
         id="timer"
@@ -116,6 +157,8 @@
     </div>
 
 
+    <!-- STATUS -->
+
     <div
         id="status"
         class="status"
@@ -124,12 +167,106 @@
     </div>
 
 
+    <!-- BOTÃO -->
+
     <button
         id="startButton"
     >
         Gravar 5 segundos
     </button>
 
+
+    <!-- VALORES ATUAIS -->
+
+    <div class="values">
+
+        <div class="value-card">
+
+            <h3>Acc X</h3>
+
+            <div
+                id="accX"
+                class="value"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="value-card">
+
+            <h3>Acc Y</h3>
+
+            <div
+                id="accY"
+                class="value"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="value-card">
+
+            <h3>Acc Z</h3>
+
+            <div
+                id="accZ"
+                class="value"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="value-card">
+
+            <h3>Alpha</h3>
+
+            <div
+                id="alpha"
+                class="value"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="value-card">
+
+            <h3>Beta</h3>
+
+            <div
+                id="beta"
+                class="value"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="value-card">
+
+            <h3>Gamma</h3>
+
+            <div
+                id="gamma"
+                class="value"
+            >
+                0
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- GRÁFICO -->
 
     <div class="chart-container">
 
@@ -153,7 +290,7 @@ const DURATION = 5000;
 
 
 // =====================================================
-// ELEMENTOS
+// ELEMENTOS HTML
 // =====================================================
 
 const startButton =
@@ -172,8 +309,44 @@ const timerElement =
     );
 
 
+// Valores de aceleração
+
+const accXElement =
+    document.getElementById(
+        "accX"
+    );
+
+const accYElement =
+    document.getElementById(
+        "accY"
+    );
+
+const accZElement =
+    document.getElementById(
+        "accZ"
+    );
+
+
+// Valores de rotação
+
+const alphaElement =
+    document.getElementById(
+        "alpha"
+    );
+
+const betaElement =
+    document.getElementById(
+        "beta"
+    );
+
+const gammaElement =
+    document.getElementById(
+        "gamma"
+    );
+
+
 // =====================================================
-// DADOS DO MOVIMENTO
+// VARIÁVEIS
 // =====================================================
 
 let motionData = [];
@@ -207,6 +380,10 @@ const motionChart =
                 labels: [],
 
                 datasets: [
+
+                    // ---------------------------------
+                    // ACELERAÇÃO
+                    // ---------------------------------
 
                     {
                         label:
@@ -245,6 +422,50 @@ const motionChart =
                         pointRadius: 0,
 
                         tension: 0.2
+                    },
+
+
+                    // ---------------------------------
+                    // ROTAÇÃO
+                    // ---------------------------------
+
+                    {
+                        label:
+                            "Rotation Alpha",
+
+                        data: [],
+
+                        borderWidth: 2,
+
+                        pointRadius: 0,
+
+                        tension: 0.2
+                    },
+
+                    {
+                        label:
+                            "Rotation Beta",
+
+                        data: [],
+
+                        borderWidth: 2,
+
+                        pointRadius: 0,
+
+                        tension: 0.2
+                    },
+
+                    {
+                        label:
+                            "Rotation Gamma",
+
+                        data: [],
+
+                        borderWidth: 2,
+
+                        pointRadius: 0,
+
+                        tension: 0.2
                     }
 
                 ]
@@ -258,6 +479,26 @@ const motionChart =
 
                 animation: false,
 
+                interaction: {
+
+                    intersect: false,
+
+                    mode: "index"
+
+                },
+
+
+                plugins: {
+
+                    legend: {
+
+                        position: "bottom"
+
+                    }
+
+                },
+
+
                 scales: {
 
                     x: {
@@ -268,9 +509,11 @@ const motionChart =
 
                             text:
                                 "Tempo (segundos)"
+
                         }
 
                     },
+
 
                     y: {
 
@@ -279,7 +522,8 @@ const motionChart =
                             display: true,
 
                             text:
-                                "Aceleração (m/s²)"
+                                "Valor do sensor"
+
                         }
 
                     }
@@ -293,7 +537,7 @@ const motionChart =
 
 
 // =====================================================
-// RECEBER MOVIMENTO
+// RECEBER DEVICE MOTION
 // =====================================================
 
 function handleMotion(event) {
@@ -303,24 +547,45 @@ function handleMotion(event) {
     }
 
 
+    // =================================================
+    // ACELERAÇÃO
+    // =================================================
+
     const acceleration =
         event.acceleration;
 
 
-    if (!acceleration) {
-        return;
-    }
-
-
     const x =
-        acceleration.x ?? 0;
+        acceleration?.x ?? 0;
 
     const y =
-        acceleration.y ?? 0;
+        acceleration?.y ?? 0;
 
     const z =
-        acceleration.z ?? 0;
+        acceleration?.z ?? 0;
 
+
+    // =================================================
+    // ROTAÇÃO
+    // =================================================
+
+    const rotation =
+        event.rotationRate;
+
+
+    const alpha =
+        rotation?.alpha ?? 0;
+
+    const beta =
+        rotation?.beta ?? 0;
+
+    const gamma =
+        rotation?.gamma ?? 0;
+
+
+    // =================================================
+    // TEMPO
+    // =================================================
 
     const elapsed =
         performance.now()
@@ -331,16 +596,53 @@ function handleMotion(event) {
         elapsed / 1000;
 
 
-    // Guardar os dados
+    // =================================================
+    // ATUALIZAR VALORES NA TELA
+    // =================================================
+
+    accXElement.textContent =
+        x.toFixed(2);
+
+    accYElement.textContent =
+        y.toFixed(2);
+
+    accZElement.textContent =
+        z.toFixed(2);
+
+
+    alphaElement.textContent =
+        alpha.toFixed(2);
+
+    betaElement.textContent =
+        beta.toFixed(2);
+
+    gammaElement.textContent =
+        gamma.toFixed(2);
+
+
+    // =================================================
+    // SALVAR AMOSTRA
+    // =================================================
+
     motionData.push({
 
         time: seconds,
 
-        x: x,
+        acceleration: {
 
-        y: y,
+            x: x,
+            y: y,
+            z: z
 
-        z: z
+        },
+
+        rotationRate: {
+
+            alpha: alpha,
+            beta: beta,
+            gamma: gamma
+
+        }
 
     });
 
@@ -348,7 +650,7 @@ function handleMotion(event) {
 
 
 // =====================================================
-// ATUALIZAR TIMER
+// TIMER
 // =====================================================
 
 function updateTimer() {
@@ -387,6 +689,98 @@ function updateTimer() {
 
 
 // =====================================================
+// DESENHAR GRÁFICO
+// =====================================================
+
+function drawChart() {
+
+    // -----------------------------------------------
+    // TEMPO
+    // -----------------------------------------------
+
+    motionChart.data.labels =
+        motionData.map(
+            point =>
+                point.time.toFixed(2)
+        );
+
+
+    // -----------------------------------------------
+    // ACC X
+    // -----------------------------------------------
+
+    motionChart.data.datasets[0].data =
+        motionData.map(
+            point =>
+                point.acceleration.x
+        );
+
+
+    // -----------------------------------------------
+    // ACC Y
+    // -----------------------------------------------
+
+    motionChart.data.datasets[1].data =
+        motionData.map(
+            point =>
+                point.acceleration.y
+        );
+
+
+    // -----------------------------------------------
+    // ACC Z
+    // -----------------------------------------------
+
+    motionChart.data.datasets[2].data =
+        motionData.map(
+            point =>
+                point.acceleration.z
+        );
+
+
+    // -----------------------------------------------
+    // ALPHA
+    // -----------------------------------------------
+
+    motionChart.data.datasets[3].data =
+        motionData.map(
+            point =>
+                point.rotationRate.alpha
+        );
+
+
+    // -----------------------------------------------
+    // BETA
+    // -----------------------------------------------
+
+    motionChart.data.datasets[4].data =
+        motionData.map(
+            point =>
+                point.rotationRate.beta
+        );
+
+
+    // -----------------------------------------------
+    // GAMMA
+    // -----------------------------------------------
+
+    motionChart.data.datasets[5].data =
+        motionData.map(
+            point =>
+                point.rotationRate.gamma
+        );
+
+
+    // -----------------------------------------------
+    // ATUALIZAR
+    // -----------------------------------------------
+
+    motionChart.update();
+
+}
+
+
+// =====================================================
 // FINALIZAR GRAVAÇÃO
 // =====================================================
 
@@ -406,17 +800,18 @@ function finishRecording() {
 
 
     statusElement.textContent =
-        "Movimento gravado!";
+        "Gravação concluída";
 
 
     startButton.disabled =
         false;
 
 
-    // Mostrar os dados no gráfico
+    // Desenhar o gráfico
     drawChart();
 
 
+    // Mostrar no console
     console.log(
         "Dados gravados:",
         motionData
@@ -426,60 +821,28 @@ function finishRecording() {
 
 
 // =====================================================
-// DESENHAR GRÁFICO
-// =====================================================
-
-function drawChart() {
-
-    motionChart.data.labels =
-        motionData.map(
-            point =>
-                point.time.toFixed(2)
-        );
-
-
-    motionChart.data.datasets[0].data =
-        motionData.map(
-            point => point.x
-        );
-
-
-    motionChart.data.datasets[1].data =
-        motionData.map(
-            point => point.y
-        );
-
-
-    motionChart.data.datasets[2].data =
-        motionData.map(
-            point => point.z
-        );
-
-
-    motionChart.update();
-
-}
-
-
-// =====================================================
-// COMEÇAR GRAVAÇÃO
+// INICIAR GRAVAÇÃO
 // =====================================================
 
 async function startRecording() {
 
     try {
 
-        // =============================================
-        // PERMISSÃO PARA IOS
-        // =============================================
+        // =================================================
+        // PERMISSÃO IOS
+        // =================================================
 
         if (
+
             typeof DeviceMotionEvent !==
-            "undefined" &&
+            "undefined"
+
+            &&
 
             typeof DeviceMotionEvent
                 .requestPermission ===
-                "function"
+            "function"
+
         ) {
 
             const permission =
@@ -494,17 +857,18 @@ async function startRecording() {
             ) {
 
                 statusElement.textContent =
-                    "Permissão negada.";
+                    "Permissão para sensores negada.";
 
                 return;
+
             }
 
         }
 
 
-        // =============================================
-        // LIMPAR DADOS ANTERIORES
-        // =============================================
+        // =================================================
+        // LIMPAR DADOS
+        // =================================================
 
         motionData = [];
 
@@ -525,11 +889,12 @@ async function startRecording() {
         motionChart.update();
 
 
-        // =============================================
+        // =================================================
         // COMEÇAR
-        // =============================================
+        // =================================================
 
         recording = true;
+
 
         startTime =
             performance.now();
@@ -540,12 +905,12 @@ async function startRecording() {
 
 
         statusElement.textContent =
-            "Gravando movimento...";
+            "Gravando...";
 
 
-        // =============================================
-        // ESCUTAR SENSOR
-        // =============================================
+        // =================================================
+        // EVENTO
+        // =================================================
 
         window.addEventListener(
             "devicemotion",
@@ -553,16 +918,16 @@ async function startRecording() {
         );
 
 
-        // =============================================
+        // =================================================
         // TIMER
-        // =============================================
+        // =================================================
 
         updateTimer();
 
 
-        // =============================================
-        // ESPERAR 5 SEGUNDOS
-        // =============================================
+        // =================================================
+        // PARAR APÓS 5 SEGUNDOS
+        // =================================================
 
         setTimeout(
             finishRecording,
@@ -578,7 +943,9 @@ async function startRecording() {
         statusElement.textContent =
             "Erro ao iniciar sensores.";
 
+
         recording = false;
+
 
         startButton.disabled =
             false;
@@ -603,3 +970,4 @@ startButton.addEventListener(
 </body>
 
 </html>
+```
