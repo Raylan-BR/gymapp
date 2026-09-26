@@ -1,218 +1,460 @@
+```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Teste de sensores</title>
+    <title>DeviceMotion - Sensores</title>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            margin: 0;
             padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+
+        h1 {
+            text-align: center;
         }
 
         button {
-            font-size: 20px;
-            padding: 15px 25px;
+            display: block;
+            margin: 20px auto;
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #222;
+            color: white;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .sensors {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
         }
 
         .sensor {
-            font-size: 22px;
-            margin: 20px 0;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
 
-        #status {
-            padding: 15px;
-            background: #eee;
-            white-space: pre-wrap;
+        .sensor h2 {
+            margin-top: 0;
+            font-size: 18px;
+        }
+
+        .value {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .status {
+            text-align: center;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+            .sensors {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <h1>Teste de movimento</h1>
+<div class="container">
 
-    <button id="start">
+    <h1>Sensor de movimento</h1>
+
+    <button id="startButton">
         Iniciar sensores
     </button>
 
-    <div id="status">
-        Aguardando...
+    <div id="status" class="status">
+        Sensores não iniciados
     </div>
 
-    <div class="sensor">
-        X: <span id="x">---</span>
+    <!-- Aceleração -->
+    <div class="sensors">
+
+        <div class="sensor">
+            <h2>Aceleração X</h2>
+            <div id="accX" class="value">0</div>
+            <small>m/s²</small>
+        </div>
+
+        <div class="sensor">
+            <h2>Aceleração Y</h2>
+            <div id="accY" class="value">0</div>
+            <small>m/s²</small>
+        </div>
+
+        <div class="sensor">
+            <h2>Aceleração Z</h2>
+            <div id="accZ" class="value">0</div>
+            <small>m/s²</small>
+        </div>
+
     </div>
 
-    <div class="sensor">
-        Y: <span id="y">---</span>
+    <!-- Rotação -->
+    <div class="sensors">
+
+        <div class="sensor">
+            <h2>Alpha</h2>
+            <div id="alpha" class="value">0</div>
+            <small>°/s</small>
+        </div>
+
+        <div class="sensor">
+            <h2>Beta</h2>
+            <div id="beta" class="value">0</div>
+            <small>°/s</small>
+        </div>
+
+        <div class="sensor">
+            <h2>Gamma</h2>
+            <div id="gamma" class="value">0</div>
+            <small>°/s</small>
+        </div>
+
     </div>
 
-    <div class="sensor">
-        Z: <span id="z">---</span>
+    <!-- Gráfico -->
+    <div class="chart-container">
+        <canvas id="motionChart"></canvas>
     </div>
 
-    <div class="sensor">
-        Gravidade X: <span id="gx">---</span>
-    </div>
-
-    <div class="sensor">
-        Gravidade Y: <span id="gy">---</span>
-    </div>
-
-    <div class="sensor">
-        Gravidade Z: <span id="gz">---</span>
-    </div>
-
-    <script>
-
-        const status = document.getElementById("status");
-
-        const x = document.getElementById("x");
-        const y = document.getElementById("y");
-        const z = document.getElementById("z");
-
-        const gx = document.getElementById("gx");
-        const gy = document.getElementById("gy");
-        const gz = document.getElementById("gz");
-
-        const button = document.getElementById("start");
+</div>
 
 
-        function mostrarStatus(texto) {
-            status.textContent = texto;
-            console.log(texto);
+<script>
+
+    // ==========================================
+    // ELEMENTOS HTML
+    // ==========================================
+
+    const startButton = document.getElementById("startButton");
+    const statusElement = document.getElementById("status");
+
+    const accXElement = document.getElementById("accX");
+    const accYElement = document.getElementById("accY");
+    const accZElement = document.getElementById("accZ");
+
+    const alphaElement = document.getElementById("alpha");
+    const betaElement = document.getElementById("beta");
+    const gammaElement = document.getElementById("gamma");
+
+
+    // ==========================================
+    // CONFIGURAÇÃO DO GRÁFICO
+    // ==========================================
+
+    const ctx = document
+        .getElementById("motionChart")
+        .getContext("2d");
+
+    const motionChart = new Chart(ctx, {
+
+        type: "line",
+
+        data: {
+
+            labels: [],
+
+            datasets: [
+
+                {
+                    label: "Aceleração X",
+                    data: [],
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.2
+                },
+
+                {
+                    label: "Aceleração Y",
+                    data: [],
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.2
+                },
+
+                {
+                    label: "Aceleração Z",
+                    data: [],
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.2
+                }
+
+            ]
+        },
+
+        options: {
+
+            responsive: true,
+
+            animation: false,
+
+            interaction: {
+                intersect: false,
+                mode: "index"
+            },
+
+            scales: {
+
+                x: {
+                    title: {
+                        display: true,
+                        text: "Tempo"
+                    }
+                },
+
+                y: {
+                    title: {
+                        display: true,
+                        text: "Aceleração (m/s²)"
+                    }
+                }
+
+            }
+        }
+
+    });
+
+
+    // ==========================================
+    // CONTROLE DO TEMPO
+    // ==========================================
+
+    let startTime = null;
+
+    // Quantidade máxima de pontos no gráfico
+    const MAX_POINTS = 100;
+
+
+    // ==========================================
+    // FUNÇÃO PARA ADICIONAR DADOS AO GRÁFICO
+    // ==========================================
+
+    function addDataToChart(x, y, z) {
+
+        if (startTime === null) {
+            startTime = performance.now();
+        }
+
+        const elapsed =
+            (performance.now() - startTime) / 1000;
+
+        const time = elapsed.toFixed(1);
+
+        motionChart.data.labels.push(time);
+
+        motionChart.data.datasets[0].data.push(x);
+        motionChart.data.datasets[1].data.push(y);
+        motionChart.data.datasets[2].data.push(z);
+
+
+        // Remove os pontos antigos
+        if (
+            motionChart.data.labels.length >
+            MAX_POINTS
+        ) {
+
+            motionChart.data.labels.shift();
+
+            motionChart.data.datasets.forEach(
+                dataset => {
+                    dataset.data.shift();
+                }
+            );
+
         }
 
 
-        button.addEventListener("click", async () => {
-
-            mostrarStatus("Iniciando...");
-
-
-            // Verifica se o navegador conhece a API
-            if (typeof DeviceMotionEvent === "undefined") {
-
-                mostrarStatus(
-                    "ERRO:\n" +
-                    "DeviceMotionEvent não existe neste navegador."
-                );
-
-                return;
-            }
+        motionChart.update("none");
+    }
 
 
-            mostrarStatus(
-                "DeviceMotionEvent encontrado.\n" +
-                "Solicitando permissão..."
-            );
+    // ==========================================
+    // RECEBER DADOS DO DEVICEMOTION
+    // ==========================================
+
+    function handleMotion(event) {
+
+        const acceleration =
+            event.acceleration;
+
+        const rotation =
+            event.rotationRate;
 
 
-            // Alguns navegadores exigem permissão explícita
+        // --------------------------------------
+        // ACELERAÇÃO
+        // --------------------------------------
+
+        const x =
+            acceleration?.x ?? 0;
+
+        const y =
+            acceleration?.y ?? 0;
+
+        const z =
+            acceleration?.z ?? 0;
+
+
+        // --------------------------------------
+        // MOSTRAR NA INTERFACE
+        // --------------------------------------
+
+        accXElement.textContent =
+            x.toFixed(2);
+
+        accYElement.textContent =
+            y.toFixed(2);
+
+        accZElement.textContent =
+            z.toFixed(2);
+
+
+        // --------------------------------------
+        // ROTAÇÃO
+        // --------------------------------------
+
+        const alpha =
+            rotation?.alpha ?? 0;
+
+        const beta =
+            rotation?.beta ?? 0;
+
+        const gamma =
+            rotation?.gamma ?? 0;
+
+
+        alphaElement.textContent =
+            alpha.toFixed(2);
+
+        betaElement.textContent =
+            beta.toFixed(2);
+
+        gammaElement.textContent =
+            gamma.toFixed(2);
+
+
+        // --------------------------------------
+        // ATUALIZAR GRÁFICO
+        // --------------------------------------
+
+        addDataToChart(x, y, z);
+    }
+
+
+    // ==========================================
+    // INICIAR SENSOR
+    // ==========================================
+
+    async function startSensors() {
+
+        try {
+
+            // Alguns dispositivos, principalmente
+            // iOS, exigem permissão explícita.
+
             if (
+                typeof DeviceMotionEvent !== "undefined" &&
                 typeof DeviceMotionEvent.requestPermission === "function"
             ) {
 
-                try {
+                const permission =
+                    await DeviceMotionEvent.requestPermission();
 
-                    const permission =
-                        await DeviceMotionEvent.requestPermission();
+                if (permission !== "granted") {
 
-                    console.log("Permissão:", permission);
-
-                    if (permission !== "granted") {
-
-                        mostrarStatus(
-                            "PERMISSÃO NEGADA.\n\n" +
-                            "O navegador não permitiu acesso aos sensores."
-                        );
-
-                        return;
-                    }
-
-                } catch (error) {
-
-                    mostrarStatus(
-                        "ERRO AO SOLICITAR PERMISSÃO:\n\n" +
-                        error.name + "\n" +
-                        error.message
-                    );
+                    statusElement.textContent =
+                        "Permissão para sensores negada.";
 
                     return;
                 }
-
-            } else {
-
-                console.log(
-                    "Este navegador não exige requestPermission()."
-                );
-
             }
 
 
-            mostrarStatus(
-                "Permissão OK.\n\n" +
-                "Aguardando dados do sensor..."
+            // Resetar tempo
+            startTime = null;
+
+
+            // Registrar listener
+            window.addEventListener(
+                "devicemotion",
+                handleMotion
             );
 
 
-            // Agora começamos a ouvir o sensor
-            window.addEventListener("devicemotion", (event) => {
-
-                console.log("devicemotion:", event);
+            statusElement.textContent =
+                "Sensores funcionando";
 
 
-                // Aceleração sem gravidade
-                const acceleration =
-                    event.acceleration;
+            startButton.textContent =
+                "Sensores ativos";
+
+            startButton.disabled = true;
 
 
-                // Aceleração incluindo gravidade
-                const accelerationGravity =
-                    event.accelerationIncludingGravity;
+        } catch (error) {
+
+            console.error(error);
+
+            statusElement.textContent =
+                "Erro ao iniciar os sensores.";
+
+        }
+    }
 
 
-                if (acceleration) {
+    // ==========================================
+    // BOTÃO
+    // ==========================================
 
-                    x.textContent =
-                        acceleration.x?.toFixed(3) ?? "null";
+    startButton.addEventListener(
+        "click",
+        startSensors
+    );
 
-                    y.textContent =
-                        acceleration.y?.toFixed(3) ?? "null";
-
-                    z.textContent =
-                        acceleration.z?.toFixed(3) ?? "null";
-
-                }
-
-
-                if (accelerationGravity) {
-
-                    gx.textContent =
-                        accelerationGravity.x?.toFixed(3) ?? "null";
-
-                    gy.textContent =
-                        accelerationGravity.y?.toFixed(3) ?? "null";
-
-                    gz.textContent =
-                        accelerationGravity.z?.toFixed(3) ?? "null";
-
-                }
-
-
-                status.textContent =
-                    "SENSOR FUNCIONANDO!\n\n" +
-                    "Intervalo: " +
-                    event.interval +
-                    " ms";
-
-            });
-
-        });
-
-    </script>
+</script>
 
 </body>
 </html>
+```
